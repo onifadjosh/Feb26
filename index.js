@@ -1,5 +1,7 @@
 const express = require("express");
 const app = express();
+const ejs = require('ejs')
+app.set("view engine", 'ejs')
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -70,12 +72,22 @@ const products = [
 app.get("/", (req, res) => {
   // res.send(true)
   // res.send(['pampam', 'nony', ])
-//   res.send(products)
+  //   res.send(products)
 
-console.log(__dirname);
-res.sendFile(__dirname+"/index.html")
-
+  console.log(__dirname);
+  res.sendFile(__dirname + "/index.html");
 });
+
+app.get('/index', (req, res)=>{
+  res.render('index', {products})
+})
+
+app.get('/addProduct', (req, res)=>{
+  res.render()
+})
+
+
+
 
 // app.listen(port, callback)
 app.listen(process.env.PORT, (err) => {
