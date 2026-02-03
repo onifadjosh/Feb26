@@ -21,15 +21,22 @@
               <h6 class="card-subtitle mb-2 text-body-secondary"><%= product.prodPrice %></h6>
               <p class="card-text"><%= product.prodDescription %></p>
               
-            <div>
-                <div class="btn btn-dark">Edit</div>
-                <div class="btn btn-danger">Delete</div>
+            <div class="d-flex gap-3">
+               <form action="/editProd/<%= index %>" method="get">
+                <button class="btn btn-dark">Edit</button>
+               </form>
+               <form action="/deleteProd/<%= index %>" method="post">
+                <button class="btn btn-danger">Delete</button>
+               </form>
             </div>
             </div>
           </div>
     <% }) %>
         
 </div>
+
+
+<a href="/addProduct" class="btn btn-dark">Go To Add Product</a>
 
 
 

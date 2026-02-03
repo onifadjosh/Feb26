@@ -4,6 +4,7 @@ const ejs = require('ejs')
 app.set("view engine", 'ejs')
 const dotenv = require("dotenv");
 dotenv.config();
+app.use(express.urlencoded({extended:true}))
 
 // app.get(path, callback)
 const products = [
@@ -83,7 +84,35 @@ app.get('/index', (req, res)=>{
 })
 
 app.get('/addProduct', (req, res)=>{
-  res.render()
+  res.render("addProduct")
+})
+
+app.post("/addProduct", (req, res)=>{
+    console.log(req.body)
+    const{prodName, prodPrice, prodQuantity, prodDescription} = req.body
+
+    products.push(req.body)
+    res.render("index", {products})
+})
+
+app.post("/deleteProd/:id", (req, res)=>{
+  console.log(req.params);
+  const {id}= req.params
+  products.splice(id,1)
+  res.render("index", {products})
+  
+  
+})
+
+app.get("/editProd/:id", (req, res)=>{
+  res.render("editProduct")
+})
+
+app.post("/editProd/:id", (req, res)=>{
+  const {id}= req.params//collect the id for index.ejs and pass the params here
+  const{prodName, prodPrice, prodQuantity, prodDescription} = req.body //since we are editing, we need a req body for want we want to change/replace
+  products.splice(id, 1, req.body)//the normal array method to remove and replace
+  res.render("index", {products})//after editing, we now display the new products
 })
 
 
