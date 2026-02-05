@@ -1,10 +1,23 @@
 const express = require("express");
 const app = express();
 const ejs = require('ejs')
+const mongoose = require("mongoose")
 app.set("view engine", 'ejs')
 const dotenv = require("dotenv");
 dotenv.config();
 app.use(express.urlencoded({extended:true}))
+
+
+mongoose.connect(process.env.DATABASE_URI)
+.then(()=>{
+  console.log("Database connected successfully");
+  
+})
+.catch(()=>{
+  console.log("Failed to connect to DB");
+  
+})
+
 
 // app.get(path, callback)
 const products = [

@@ -13,3 +13,16 @@
 //post requests
 //deleting items in an array
 //editing items in an array
+
+
+//cluster->database->collections->documents
+
+//connecting to the Database
+//saving in to the database
+//getting information from the database
+//editing info from the database
+//deleting info in the db
+
+
+
+//modularization
