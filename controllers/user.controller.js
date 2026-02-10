@@ -23,7 +23,31 @@ const createUser=async(req, res)=>{
     }
 }
 
+const editUser=async(req, res)=>{
+    const {firstName, lastName}= req.body
+    const {id} = req.params
+
+    try {
+        let allowedUpdate = {
+           ...(firstName&&{firstName}),
+           ...(lastName&&{lastName})
+        }
+        const newUser= await UserModel.findByIdAndUpdate(id, allowedUpdate)
+        res.status(200).send({
+            message:"User updated successfully"
+        })
+    } catch (error) {
+        console.log(error);
+
+         res.status(400).send({
+            message:"User update failed"
+        })
+        
+    }
+}
+
 module.exports= {
-    createUser
+    createUser,
+    editUser
 }
 
