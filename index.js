@@ -6,6 +6,9 @@ app.set("view engine", 'ejs')
 const dotenv = require("dotenv");
 dotenv.config();
 app.use(express.urlencoded({extended:true}))
+app.use(express.json())
+const UserRouter = require('./routers/user.routes')
+app.use('/api/v1', UserRouter)
 
 
 mongoose.connect(process.env.DATABASE_URI)
@@ -17,6 +20,8 @@ mongoose.connect(process.env.DATABASE_URI)
   console.log("Failed to connect to DB");
   
 })
+
+
 
 
 // app.get(path, callback)
