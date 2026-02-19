@@ -17,16 +17,18 @@ const createUser = async (req, res) => {
       password: hashedPassword,
     });
 
-    const token = await jwt.sign({id:user._id}, process.env.JWT_SECRET, {expiresIn:"5h"})
+    const token = await jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "5h",
+    });
     res.status(201).send({
       message: "user created successfully",
       data: {
         lastName,
         email,
         firstName,
-        roles:user.roles
+        roles: user.roles,
       },
-      token
+      token,
     });
   } catch (error) {
     console.log(error);
@@ -63,7 +65,9 @@ const login = async (req, res) => {
 
       return;
     }
-    const token = await jwt.sign({id:isUser._id}, process.env.JWT_SECRET, {expiresIn:"5h"})
+    const token = await jwt.sign({ id: isUser._id, roles: isUser.roles }, process.env.JWT_SECRET, {
+      expiresIn: "5h",
+    });
     res.status(200).send({
       message: "user logged in successfully",
       data: {
@@ -72,7 +76,7 @@ const login = async (req, res) => {
         firstName: isUser.firstName,
         lastName: isUser.lastName,
       },
-      token
+      token,
     });
   } catch (error) {
     console.log(error);
@@ -106,7 +110,18 @@ const editUser = async (req, res) => {
 };
 
 const getAllUser = async (req, res) => {
+
+  const user=req.user.roles
   try {
+
+    if(user!=='admin'){
+      res.status(403).send({
+        message:"Forbidden request"
+      })
+
+      return
+    }
+
     let users = await UserModel.find().select("-roles -password");
     // let users = await UserModel.find()
     res.status(200).send({
@@ -146,10 +161,57 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const verifyUser = (req, res, next) => {
+  const token = req.headers["authorization"].split(" ")[1]
+    ? req.headers["authorization"].split(" ")[1]
+    : req.headers["authorization"].split(" ")[0];
+
+  jwt.verify(token, process.env.JWT_SECRET, function (err, decoded) {
+    if (err) {
+      res.status(401).send({
+        message: "user unauthorized",
+      });
+      return;
+    }
+
+    console.log(decoded);
+
+    req.user = decoded;
+
+    next()
+  });
+};
+
+
+const getMe=async(req, res)=>{
+  console.log(req.user.id);
+  // const {id} = req.user
+  // console.log(id);
+  
+  try {
+    const user =await UserModel.findById(req.user.id).select("-password")
+
+    res.status(200).send({
+      message:"user retreived successfully",
+      data:user
+    })
+  } catch (error) {
+    console.log(error);
+    
+    res.status(404).send({
+      message:"user not found"
+    })
+  }
+  
+
+}
+
 module.exports = {
   createUser,
   editUser,
   getAllUser,
   deleteUser,
   login,
+  verifyUser,
+  getMe
 };
