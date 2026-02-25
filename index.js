@@ -10,7 +10,9 @@ app.use(express.urlencoded({extended:true}))
 app.use(express.json())
 app.use(cors())
 const UserRouter = require('./routers/user.routes')
+const ProductRouter = require("./routers/product.routes")
 app.use('/api/v1', UserRouter)
+app.use("/api/v1", ProductRouter)
 
 
 mongoose.connect(process.env.DATABASE_URI)
