@@ -161,10 +161,13 @@ const deleteUser = async (req, res) => {
   }
 };
 
-const verifyUser = (req, res, next) => {
-  const token = req.headers["authorization"].split(" ")[1]
+const verifyUser = async(req, res, next) => {
+  try {
+    const token = req.headers["authorization"].split(" ")[1]
     ? req.headers["authorization"].split(" ")[1]
     : req.headers["authorization"].split(" ")[0];
+
+
 
   jwt.verify(token, process.env.JWT_SECRET, function (err, decoded) {
     if (err) {
@@ -180,6 +183,11 @@ const verifyUser = (req, res, next) => {
 
     next()
   });
+  } catch (error) {
+    res.status(401).send({
+      message:"user unauthorized"
+    })
+  }
 };
 
 

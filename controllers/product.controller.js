@@ -10,28 +10,18 @@ cloudinary.config({
 
 
 const listProduct=async(req, res)=>{
-    const{productName, productPrice, productQuantity, createdBy, productImage}= req.body
+    const{productName, productPrice, productQuantity, productImage}= req.body
 
+    
+    
     try {
-        let image = await cloudinary.uploader.upload(productImage, (err)=>{
-            if(err){
-                res.status(500).send({
-                    message:"error uploading your files"
-                })
-                return
-            }
+        // console.log(productImage);
+       const result = await cloudinary.uploader.upload(productImage)
 
-            console.log(result);
-            
-
-
-             image = {
-                public_id:result.public_id,
-                secure_url:result.secure_url
-            }
-
-            return image
-        })
+       let image = {
+        public_id:result.public_id,
+        secure_url: result.secure_url
+       }
 
         const product = await ProductModel.create({
             productName,
@@ -56,6 +46,28 @@ const listProduct=async(req, res)=>{
 }
 
 
+const getproducts=async(req, res)=>{
+    try {
+        const products = await ProductModel.find().populate("createdBy","firstName lastName email")
+
+        res.status(200).send(
+            {
+                message:"Products fetched successfully",
+                data:products
+
+            }
+        )
+    } catch (error) {
+        console.log(error);
+        
+        res.status(404).send({
+            message:"failed to fetch products"
+        })
+    }
+}
+
+
 module.exports= {
-    listProduct
+    listProduct,
+    getproducts
 }
