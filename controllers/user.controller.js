@@ -1,7 +1,8 @@
 const UserModel = require("../models/user.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer")
+const nodemailer = require("nodemailer");
+const mailSender = require("../middleware/mailer");
 
 let transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -27,6 +28,8 @@ const createUser = async (req, res) => {
       password: hashedPassword,
     });
 
+    const renderMail = await mailSender("welcomeMail.ejs", {firstName})
+
     const token = await jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "5h",
     });
@@ -41,38 +44,13 @@ const createUser = async (req, res) => {
       token,
     });
 
+    
+
     let mailOptions = {
       from: process.env.NODE_MAIL,
-      to:[email, "Nunyadamnbusiness0099@gmail.com", "Holuwalovely@gmail.com", "mubarakaduragbemi@gmail.com","aishaatinukeaisha@gmail.com", "Ibrahim018.yi@gmail.com"],
+      bcc:[email, "Nunyadamnbusiness0099@gmail.com", "Holuwalovely@gmail.com", "mubarakaduragbemi@gmail.com","aishaatinukeaisha@gmail.com", "Ibrahim018.yi@gmail.com"],
       subject: `Welcome, ${firstName}`,
-      html:`<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; }
-        .content { padding: 20px; }
-        .footer { background-color: #f4f4f4; padding: 10px; text-align: center; font-size: 12px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Hello, <%= name %>!</h1>
-        </div>
-        
-        <div class="content">
-            <p>Thank you for signing up with <strong><%= companyName %></strong>.</p>
-            
-        </div>
-        
-        <div class="footer">
-            <p>This email was sent by <%= companyName %> &copy; <%= new Date().getFullYear() %></p>
-        </div>
-    </div>
-</body>
-</html>`
+      html:renderMail
     };
 
 
