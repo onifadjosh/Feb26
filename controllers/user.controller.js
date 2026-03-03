@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const mailSender = require("../middleware/mailer");
+const otpgen = require("otp-generator");
+const OTPModel = require("../models/otp.model");
 
 let transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -245,6 +247,35 @@ const getMe=async(req, res)=>{
 
 }
 
+
+const requestOTP= async(req, res)=>{
+  const {email, otp}= req.body
+  try {
+
+    const sendOTP= otpgen.generate(4, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets:false, digits:SVGComponentTransferFunctionElement })
+    //save their otp and mail in the db
+    //send them a mail with their otp
+    const user = OTPModel.create({email, otp:sendOTP})
+
+    const otpMailContent = await mailSender('otpMail.ejs', {otp:sendOTP})
+
+    res.status(200).send({
+      message:"Otp sent successfully",
+    })
+  } catch (error) {
+    console.log(error);
+    res.status(400).send({
+      message:"Otp request failed",
+    })
+    
+  }
+}
+
+
+const forgotPassword=async(req, res)=>{
+
+}
+
 module.exports = {
   createUser,
   editUser,
@@ -252,5 +283,6 @@ module.exports = {
   deleteUser,
   login,
   verifyUser,
-  getMe
+  getMe,
+  requestOTP
 };
