@@ -4,7 +4,8 @@ const OTPSchema= new mongoose.Schema({
     email:{type:String, required:true},
     otp:{type:String, required:true},
     createdAt:{
-        type:Date.now,
+        type:Date,
+        default:Date.now,
         expires:300
     }
 })

