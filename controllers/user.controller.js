@@ -7,13 +7,12 @@ const otpgen = require("otp-generator");
 const OTPModel = require("../models/otp.model");
 
 let transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: "gmail",
   auth: {
     user: process.env.NODE_MAIL,
-    pass: process.env.NODE_PASS
-  }
+    pass: process.env.NODE_PASS,
+  },
 });
-
 
 const createUser = async (req, res) => {
   const { lastName, email, password, firstName } = req.body;
@@ -30,7 +29,7 @@ const createUser = async (req, res) => {
       password: hashedPassword,
     });
 
-    const renderMail = await mailSender("welcomeMail.ejs", {firstName})
+    const renderMail = await mailSender("welcomeMail.ejs", { firstName });
 
     const token = await jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "5h",
@@ -46,21 +45,25 @@ const createUser = async (req, res) => {
       token,
     });
 
-    
-
     let mailOptions = {
       from: process.env.NODE_MAIL,
-      bcc:[email, "Nunyadamnbusiness0099@gmail.com", "Holuwalovely@gmail.com", "mubarakaduragbemi@gmail.com","aishaatinukeaisha@gmail.com", "Ibrahim018.yi@gmail.com"],
+      bcc: [
+        email,
+        "Nunyadamnbusiness0099@gmail.com",
+        "Holuwalovely@gmail.com",
+        "mubarakaduragbemi@gmail.com",
+        "aishaatinukeaisha@gmail.com",
+        "Ibrahim018.yi@gmail.com",
+      ],
       subject: `Welcome, ${firstName}`,
-      html:renderMail
+      html: renderMail,
     };
 
-
-    transporter.sendMail(mailOptions, function(error, info){
+    transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
         console.log(error);
       } else {
-        console.log('Email sent: ' + info.response);
+        console.log("Email sent: " + info.response);
       }
     });
   } catch (error) {
@@ -98,9 +101,13 @@ const login = async (req, res) => {
 
       return;
     }
-    const token = await jwt.sign({ id: isUser._id, roles: isUser.roles }, process.env.JWT_SECRET, {
-      expiresIn: "5h",
-    });
+    const token = await jwt.sign(
+      { id: isUser._id, roles: isUser.roles },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "5h",
+      }
+    );
     res.status(200).send({
       message: "user logged in successfully",
       data: {
@@ -143,16 +150,14 @@ const editUser = async (req, res) => {
 };
 
 const getAllUser = async (req, res) => {
-
-  const user=req.user.roles
+  const user = req.user.roles;
   try {
-
-    if(user!=='admin'){
+    if (user !== "admin") {
       res.status(403).send({
-        message:"Forbidden request"
-      })
+        message: "Forbidden request",
+      });
 
-      return
+      return;
     }
 
     let users = await UserModel.find().select("-roles -password");
@@ -194,103 +199,198 @@ const deleteUser = async (req, res) => {
   }
 };
 
-const verifyUser = async(req, res, next) => {
+const verifyUser = async (req, res, next) => {
   try {
     const token = req.headers["authorization"].split(" ")[1]
-    ? req.headers["authorization"].split(" ")[1]
-    : req.headers["authorization"].split(" ")[0];
+      ? req.headers["authorization"].split(" ")[1]
+      : req.headers["authorization"].split(" ")[0];
 
+    jwt.verify(token, process.env.JWT_SECRET, function (err, decoded) {
+      if (err) {
+        res.status(401).send({
+          message: "user unauthorized",
+        });
+        return;
+      }
 
+      console.log(decoded);
 
-  jwt.verify(token, process.env.JWT_SECRET, function (err, decoded) {
-    if (err) {
-      res.status(401).send({
-        message: "user unauthorized",
+      req.user = decoded;
+
+      next();
+    });
+  } catch (error) {
+    res.status(401).send({
+      message: "user unauthorized",
+    });
+  }
+};
+
+const getMe = async (req, res) => {
+  console.log(req.user.id);
+  // const {id} = req.user
+  // console.log(id);
+
+  try {
+    const user = await UserModel.findById(req.user.id).select("-password");
+
+    res.status(200).send({
+      message: "user retreived successfully",
+      data: user,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(404).send({
+      message: "user not found",
+    });
+  }
+};
+
+const requestOTP = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const isUser = await UserModel.findOne({ email });
+
+    if (!isUser) {
+      res.status(404).send({
+        message: "account not found",
       });
       return;
     }
 
-    console.log(decoded);
+    const sendOTP = otpgen.generate(4, {
+      upperCaseAlphabets: false,
+      specialChars: false,
+      lowerCaseAlphabets: false,
+      digits: true,
+    });
 
-    req.user = decoded;
+    //save their otp and mail in the db
+    //send them a mail with their otp
+    const user = await OTPModel.create({ email, otp: sendOTP });
 
-    next()
-  });
+    const otpMailContent = await mailSender("otpMail.ejs", { otp: sendOTP });
+
+    res.status(200).send({
+      message: "Otp sent successfully",
+    });
+
+    let mailOptions = {
+      from: process.env.NODE_MAIL,
+      bcc: [
+        email,
+        "Nunyadamnbusiness0099@gmail.com",
+        "Holuwalovely@gmail.com",
+        "mubarakaduragbemi@gmail.com",
+        "aishaatinukeaisha@gmail.com",
+        "Ibrahim018.yi@gmail.com",
+      ],
+      subject: `OTP CODE`,
+      html: otpMailContent,
+    };
+
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log("Email sent: " + info.response);
+      }
+    });
   } catch (error) {
-    res.status(401).send({
-      message:"user unauthorized"
+    console.log(error);
+    res.status(400).send({
+      message: "Otp request failed",
+    });
+  }
+};
+
+const forgotPassword = async (req, res) => {
+  const { otp, email, newPassword } = req.body;
+
+  try {
+    const isUser = await OTPModel.findOne({ email });
+
+    if (!isUser) {
+      res.status(404).send({
+        message: "Invalid OTP",
+      });
+
+      return;
+    }
+
+    let isMatch = otp == isUser.otp;
+
+    if (!isMatch) {
+      res.status(404).send({
+        message: "Invalid OTP",
+      });
+
+      return;
+    }
+    const saltRound = await bcrypt.genSalt(10);
+
+    const hashedPassword = await bcrypt.hash(newPassword, saltRound);
+    const user = await UserModel.findOneAndUpdate(
+      { email },
+      { password: hashedPassword },
+      { new: true }
+    );
+
+    res.status(200).send({
+      message:"Password updated successfully"
     })
+  } catch (error) {
+
+    res.status(404).send({
+      message: "Invalid OTP",
+    });
   }
 };
 
 
-const getMe=async(req, res)=>{
-  console.log(req.user.id);
-  // const {id} = req.user
-  // console.log(id);
-  
+const changePassword=async(req, res)=>{
+  const{oldPassword, newPassword}= req.body
+
   try {
-    const user =await UserModel.findById(req.user.id).select("-password")
+
+    const isUser= await UserModel.findById(req.user.id)
+
+    if(!isUser){
+      res.status(404).send({
+        message: "Invalid User",
+      });
+
+      return
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, isUser.password)
+
+    if(!isMatch){
+      res.status(404).send({
+        message: "Wrong password!",
+      });
+
+      return
+    }
+
+
+    const saltRound = await bcrypt.genSalt(10);
+
+    const hashedPassword = await bcrypt.hash(newPassword, saltRound);
+
+    const user = await UserModel.findByIdAndUpdate({_id:req.user.id}, {password:hashedPassword}, {new:true})
 
     res.status(200).send({
-      message:"user retreived successfully",
-      data:user
+      message:"Password changed successfully"
     })
   } catch (error) {
     console.log(error);
     
     res.status(404).send({
-      message:"user not found"
-    })
-  }
-  
-
-}
-
-
-const requestOTP= async(req, res)=>{
-  const {email}= req.body
-  try {
-
-    const sendOTP= otpgen.generate(4, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets:false, digits:true })
-    
-    //save their otp and mail in the db
-    //send them a mail with their otp
-    const user = OTPModel.create({email, otp:sendOTP})
-
-    const otpMailContent = await mailSender('otpMail.ejs', {otp:sendOTP})
-
-    let mailOptions = {
-      from: process.env.NODE_MAIL,
-      bcc:[email, "Nunyadamnbusiness0099@gmail.com", "Holuwalovely@gmail.com", "mubarakaduragbemi@gmail.com","aishaatinukeaisha@gmail.com", "Ibrahim018.yi@gmail.com"],
-      subject: `OTP CODE`,
-      html:otpMailContent
-    };
-
-
-    transporter.sendMail(mailOptions, function(error, info){
-      if (error) {
-        console.log(error);
-      } else {
-        console.log('Email sent: ' + info.response);
-      }
+      message: "Failed to change password",
     });
-
-    res.status(200).send({
-      message:"Otp sent successfully",
-    })
-  } catch (error) {
-    console.log(error);
-    res.status(400).send({
-      message:"Otp request failed",
-    })
-    
   }
-}
-
-
-const forgotPassword=async(req, res)=>{
-
 }
 
 module.exports = {
@@ -301,5 +401,7 @@ module.exports = {
   login,
   verifyUser,
   getMe,
-  requestOTP
+  requestOTP,
+  forgotPassword,
+  changePassword
 };

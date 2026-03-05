@@ -1,4 +1,5 @@
 const ProductModel = require("../models/product.model")
+
 const cloudinary = require("cloudinary").v2
 
 
@@ -67,7 +68,39 @@ const getproducts=async(req, res)=>{
 }
 
 
+const getproductsBy=async(req, res)=>{
+    const {productName, productPrice, createdBy}= req.query
+
+    try {
+        const filter ={}
+        if(productName)
+          filter.productName={$regex:productName , $options:"i"} 
+        if(productPrice)
+            filter.productPrice= productPrice
+        if(createdBy)
+            filter.createdBy= createdBy
+        // if(author)
+        //     filter.author= {$regex:author.firstName, $options:"i"}
+
+        const product =await ProductModel.find(filter).populate("createdBy","firstName lastName email")
+
+        res.status(200).send({
+            message:"products fetched successfully",
+            data:product
+        })
+        
+    } catch (error) {
+        console.log(error);
+        
+        res.status(404).send({
+            message:"failed to fetch products"
+        })
+    }
+}
+
+
 module.exports= {
     listProduct,
-    getproducts
+    getproducts,
+    getproductsBy
 }
