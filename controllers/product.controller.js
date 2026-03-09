@@ -97,7 +97,8 @@ const getproductsBy=async(req, res)=>{
             data:product,
             meta:{
                 currentPage:page,
-                totalPages:Math.ceil(total/limit)
+                totalPages:Math.ceil(total/limit),
+                total
             }
         })
         
