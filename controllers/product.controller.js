@@ -70,6 +70,9 @@ const getproducts=async(req, res)=>{
 
 const getproductsBy=async(req, res)=>{
     const {productName, productPrice, createdBy}= req.query
+    const page = parseInt(req.query.page)||1
+    const limit = parseInt(req.query.limit)||10
+    const skip = (page -1)*10
 
     try {
         const filter ={}
@@ -83,12 +86,23 @@ const getproductsBy=async(req, res)=>{
         //     filter.author= {$regex:author.firstName, $options:"i"}
 
         const product =await ProductModel.find(filter).populate("createdBy","firstName lastName email")
+        .skip(skip)
+        .limit(limit)
+        .sort({createdAt:-1})
+
+        const total = await ProductModel.countDocuments(filter)
 
         res.status(200).send({
             message:"products fetched successfully",
-            data:product
+            data:product,
+            meta:{
+                currentPage:page,
+                totalPages:Math.ceil(total/limit)
+            }
         })
         
+
+
     } catch (error) {
         console.log(error);
         
