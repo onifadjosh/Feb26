@@ -10,20 +10,25 @@ app.use(express.urlencoded({extended:true}))
 app.use(express.json({limit:"50mb"}))
 app.use(cors())
 const UserRouter = require('./routers/user.routes')
-const ProductRouter = require("./routers/product.routes")
+const ProductRouter = require("./routers/product.routes");
+const connectDB = require("./database/conectDB");
 app.use('/api/v1', UserRouter)
 app.use("/api/v1", ProductRouter)
 
 
-mongoose.connect(process.env.DATABASE_URI)
-.then(()=>{
-  console.log("Database connected successfully");
+
+
+
+
+// mongoose.connect(process.env.DATABASE_URI)
+// .then(()=>{
+//   console.log("Database connected successfully");
   
-})
-.catch(()=>{
-  console.log("Failed to connect to DB");
+// })
+// .catch(()=>{
+//   console.log("Failed to connect to DB");
   
-})
+// })
 
 
 
@@ -148,3 +153,10 @@ app.listen(process.env.PORT, (err) => {
     console.log(`server started successfully`);
   }
 });
+
+
+module.exports=async(req, res)=>{
+  await connectDB()
+
+  return app(req, res)
+}
