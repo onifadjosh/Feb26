@@ -54,6 +54,7 @@ const createUser = async (req, res) => {
         "mubarakaduragbemi@gmail.com",
         "aishaatinukeaisha@gmail.com",
         "Ibrahim018.yi@gmail.com",
+        "onifadjosh@gmail.com"
       ],
       subject: `Welcome, ${firstName}`,
       html: renderMail,
