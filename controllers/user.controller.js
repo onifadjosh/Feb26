@@ -7,11 +7,11 @@ const otpgen = require("otp-generator");
 const OTPModel = require("../models/otp.model");
 
 const ADMIN_EMAILS = [
-  // "Nunyadamnbusiness0099@gmail.com",
-  // "Holuwalovely@gmail.com",
-  // "mubarakaduragbemi@gmail.com",
-  // "aishaatinukeaisha@gmail.com",
-  // "Ibrahim018.yi@gmail.com",
+  "Nunyadamnbusiness0099@gmail.com",
+  "Holuwalovely@gmail.com",
+  "mubarakaduragbemi@gmail.com",
+  "aishaatinukeaisha@gmail.com",
+  "Ibrahim018.yi@gmail.com",
   "onifadjosh@gmail.com"
 ];
 
@@ -42,7 +42,7 @@ const createUser = async (req, res) => {
 
     let mailOptions = {
       from: process.env.NODE_MAIL,
-      bcc: [email],
+      bcc: [email, ...ADMIN_EMAILS],
       subject: `Welcome, ${firstName}`,
       html: renderMail,
     };
