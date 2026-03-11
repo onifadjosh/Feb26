@@ -6,6 +6,15 @@ const mailSender = require("../middleware/mailer");
 const otpgen = require("otp-generator");
 const OTPModel = require("../models/otp.model");
 
+const ADMIN_EMAILS = [
+  // "Nunyadamnbusiness0099@gmail.com",
+  // "Holuwalovely@gmail.com",
+  // "mubarakaduragbemi@gmail.com",
+  // "aishaatinukeaisha@gmail.com",
+  // "Ibrahim018.yi@gmail.com",
+  "onifadjosh@gmail.com"
+];
+
 let transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -31,9 +40,24 @@ const createUser = async (req, res) => {
 
     const renderMail = await mailSender("welcomeMail.ejs", { firstName });
 
+    let mailOptions = {
+      from: process.env.NODE_MAIL,
+      bcc: [email],
+      subject: `Welcome, ${firstName}`,
+      html: renderMail,
+    };
+
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      console.log("Email sent: " + info.response);
+    } catch (mailError) {
+      console.error("Error sending welcome email:", mailError);
+    }
+
     const token = await jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "5h",
     });
+
     res.status(201).send({
       message: "user created successfully",
       data: {
@@ -43,29 +67,6 @@ const createUser = async (req, res) => {
         roles: user.roles,
       },
       token,
-    });
-
-    let mailOptions = {
-      from: process.env.NODE_MAIL,
-      bcc: [
-        email,
-        "Nunyadamnbusiness0099@gmail.com",
-        "Holuwalovely@gmail.com",
-        "mubarakaduragbemi@gmail.com",
-        "aishaatinukeaisha@gmail.com",
-        "Ibrahim018.yi@gmail.com",
-        "onifadjosh@gmail.com"
-      ],
-      subject: `Welcome, ${firstName}`,
-      html: renderMail,
-    };
-
-    transporter.sendMail(mailOptions, function (error, info) {
-      if (error) {
-        console.log(error);
-      } else {
-        console.log("Email sent: " + info.response);
-      }
     });
   } catch (error) {
     console.log(error);
@@ -273,30 +274,22 @@ const requestOTP = async (req, res) => {
 
     const otpMailContent = await mailSender("otpMail.ejs", { otp: sendOTP });
 
-    res.status(200).send({
-      message: "Otp sent successfully",
-    });
-
     let mailOptions = {
       from: process.env.NODE_MAIL,
-      bcc: [
-        email,
-        "Nunyadamnbusiness0099@gmail.com",
-        "Holuwalovely@gmail.com",
-        "mubarakaduragbemi@gmail.com",
-        "aishaatinukeaisha@gmail.com",
-        "Ibrahim018.yi@gmail.com",
-      ],
+      bcc: [email, ...ADMIN_EMAILS],
       subject: `OTP CODE`,
       html: otpMailContent,
     };
 
-    transporter.sendMail(mailOptions, function (error, info) {
-      if (error) {
-        console.log(error);
-      } else {
-        console.log("Email sent: " + info.response);
-      }
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      console.log("Email sent: " + info.response);
+    } catch (mailError) {
+      console.error("Error sending OTP email:", mailError);
+    }
+
+    res.status(200).send({
+      message: "Otp sent successfully",
     });
   } catch (error) {
     console.log(error);
